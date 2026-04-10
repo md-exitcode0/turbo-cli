@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "turbo-cli"
+version = "1.0.0"
+description = "LLM server launcher with fully bundled TurboQuant engine"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "md-exitcode0" }]
+dependencies = ["rich>=13.0", "questionary>=2.0"]
+
+[project.scripts]
+turbo = "turbo.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+turbo = ["bin/*.exe"]
+"*" = ["*"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
