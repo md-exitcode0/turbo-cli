@@ -1,57 +1,83 @@
 # Turbo CLI
 
-**One-click LLM Server with TurboQuant Engine**
+I built this because I was tired of dealing with llama.cpp builds every time I wanted to test TurboQuant KV cache compression. It's not fancy but it works.
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)](https://windows.microsoft.com/)
-
-## Setup (30 seconds)
+## Quick Start
 
 ```batch
-# Download and extract source code
 setup.bat
-
-# Start server
 turbo launch
 ```
 
-**That's it!** No CMake, no Visual Studio, no compilation needed.
+That's it. No CMake, no Visual Studio, no compiling.
 
-## Usage
+## What It Does
 
-```bash
-# Launch server interactively (auto-calculates VRAM)
-turbo launch
+- Bundles a pre-compiled llama-server.exe with TurboQuant support
+- `turbo launch` starts an interactive setup wizard
+- Shows VRAM estimates before loading so you don't OOM on your 8GB card
+- Save presets for models you use often
 
-# Load saved preset
-turbo launch mystar
+## Commands
 
-# Chat with model
-turbo chat
-
-# List saved presets
-turbo presets
+```batch
+turbo launch              # Interactive server setup
+turbo launch mypreset    # Load saved preset
+turbo presets            # List all presets
+turbo vram               # Show current VRAM limit
+turbo vram set 12        # Set VRAM limit to 12GB
+turbo update             # Pull latest release from GitHub
+turbo -v                 # Show version
 ```
 
-## Features
+## Example: Running a 9B Model on 8GB VRAM
 
-- ⚡ **One-click install** - Pre-built engine bundled, no compilation
-- 🚀 **TurboQuant** - Native turbo2/turbo3/turbo4 quantization support
-- 📊 **VRAM estimation** - Shows memory requirements before loading model
-- 💾 **Presets** - Save configurations for quick launch next time
+```
+$ turbo launch
+Model path: C:\models\Qwen2.5-9B-Q4_K_M.gguf
+Context: 8192
+KV Cache K: q8_0
+KV Cache V: turbo3
+GPU Layers: 99
+Port: 8080
 
-## How It Works
+VRAM Estimate:
+  Model on GPU:  5.4 GB
+  KV Cache:      0.8 GB
+  Overhead:      ~0.5 GB
+  Total:         6.7 GB
 
-1. `setup.bat` bundles the engine and installs the CLI
-2. First use unpacks `llama-server.exe` to `C:\Users\<you>\.turbo\`
-3. `turbo launch` starts the server with your GGUF model
+Fits in 24GB VRAM ✓
+```
 
 ## Requirements
 
-- Python 3.8+ (Windows)
+- Windows 10/11
+- Python 3.8+
+- NVIDIA GPU with CUDA (CPU fallback works but slow)
 - GGUF model files
-- NVIDIA GPU (optional, CPU fallback available)
 
-## License
+## How It Works
 
-MIT
+1. `setup.bat` bundles the engine and installs the pip package
+2. First run unpacks `llama-server.exe` to `%USERPROFILE%\.turbo\`
+3. `turbo launch` starts the server with your config
+
+## Technical Details
+
+- Engine: TheTom's llama.cpp fork with TurboQuant KV cache
+- Build: CMake + CUDA, Release mode
+- Binaries: llama-server.exe + 6 DLLs (ggml-cuda.dll, etc.)
+
+## My Setup
+
+- GPU: RTX 3060 Ti 8GB
+- CPU: AMD Ryzen 5 5600X
+- RAM: 32GB
+- OS: Windows 11
+
+## Source
+
+https://github.com/md-exitcode0/turbo-cli
+
+License: Apache 2.0

@@ -2,7 +2,7 @@ import os, sys, json, subprocess, time, urllib.request, signal, atexit, argparse
 from pathlib import Path
 import questionary
 
-__version__ = "1.1.1"
+__version__ = "1.1.3"
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -522,12 +522,22 @@ def cmd_update():
     console.print(f"[dim]Current install: {install_path}[/]")
 
     try:
-        # Download latest release
-        url = "https://github.com/md-exitcode0/turbo-cli/archive/refs/heads/main.zip"
-        console.print("[dim]Downloading latest version...[/]")
+        # Get latest release version
+        api_url = "https://api.github.com/repos/md-exitcode0/turbo-cli/releases/latest"
+        console.print("[dim]Checking for latest release...[/]")
+
+        with urllib.request.urlopen(api_url) as resp:
+            release_data = json.loads(resp.read())
+            tag_name = release_data["tag_name"]
+            zipball_url = release_data["zipball_url"]
+
+        console.print(f"[dim]Latest release: {tag_name}[/]")
+
+        # Download release zip
+        console.print("[dim]Downloading...[/]")
 
         with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as tmp:
-            urllib.request.urlretrieve(url, tmp.name)
+            urllib.request.urlretrieve(zipball_url, tmp.name)
             zip_path = tmp.name
 
         # Extract to temp
