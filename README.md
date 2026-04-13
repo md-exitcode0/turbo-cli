@@ -1,37 +1,57 @@
 # Turbo CLI
 
-Self-contained LLM server launcher. Ships with full TurboQuant engine source.
+**One-click LLM Server with TurboQuant Engine**
 
-## Prerequisites
-- **Python 3.10+**
-- **Git**
-- **CMake**
-- **NVIDIA GPU + CUDA**
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)](https://windows.microsoft.com/)
 
-## Install
-```cmd
-git clone https://github.com/md-exitcode0/turbo-cli.git
-cd turbo-cli
-pip install -e .
-```
+## Setup (30 seconds)
 
-## First Run
-```cmd
+```batch
+# Download and extract source code
+setup.bat
+
+# Start server
 turbo launch
 ```
-*The engine compiles automatically from bundled source. Takes 2-5 minutes. Happens only once.*
+
+**That's it!** No CMake, no Visual Studio, no compilation needed.
 
 ## Usage
-```cmd
-turbo launch          # Interactive setup
-turbo launch <name>   # Launch preset
-turbo chat            # Chat with server
-turbo presets         # Manage presets
+
+```bash
+# Launch server interactively (auto-calculates VRAM)
+turbo launch
+
+# Load saved preset
+turbo launch mystar
+
+# Chat with model
+turbo chat
+
+# List saved presets
+turbo presets
 ```
 
-## Troubleshooting
-- **Build fails?** Ensure Git, CMake, and CUDA Toolkit are installed and in PATH.
-- **CUDA error?** Update GPU drivers and verify CUDA installation.
+## Features
 
----
-*Created by **md-exitcode0***
+- ⚡ **One-click install** - Pre-built engine bundled, no compilation
+- 🚀 **TurboQuant** - Native turbo2/turbo3/turbo4 quantization support
+- 📊 **VRAM estimation** - Shows memory requirements before loading model
+- 💾 **Presets** - Save configurations for quick launch next time
+
+## How It Works
+
+1. `setup.bat` bundles the engine and installs the CLI
+2. First use unpacks `llama-server.exe` to `C:\Users\<you>\.turbo\`
+3. `turbo launch` starts the server with your GGUF model
+
+## Requirements
+
+- Python 3.8+ (Windows)
+- GGUF model files
+- NVIDIA GPU (optional, CPU fallback available)
+
+## License
+
+MIT
