@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "turbo-cli"
+version = "1.0.0"
+description = "LLM server launcher with fully bundled TurboQuant engine"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "md-exitcode0" }]
+dependencies = ["rich>=13.0", "questionary>=2.0"]
+requires-python = ">=3.8"
+
+[project.scripts]
+turbo = "turbo.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+turbo = ["data/*", "data/*/*"]
+"*" = ["*.md", "*.json", "*.yaml", "*.yml", "*.cmake", "*.txt", "*.patch", "*.h", "*.cpp", "*.c", "*.cu", "*.o", "*.obj", "*.lib"]
+
+[tool.setuptools.exclude-package-data]
+"*" = ["*.gitignore", ".github/*", ".git/*", "tests/*", "profiles/*", "benchmark-results-raw/*", "proof/*"]
