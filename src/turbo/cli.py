@@ -2,7 +2,7 @@ import os, sys, json, subprocess, time, urllib.request, signal, atexit, argparse
 from pathlib import Path
 import questionary
 
-__version__ = "1.1.1"
+__version__ = "1.1.5"
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -14,7 +14,6 @@ console = Console()
 CFG = Path.home() / ".turbo"
 PRESETS = CFG / "presets.json"
 CONFIG = CFG / "config.json"
-LOG = CFG / "server.log"
 TYPES = ["f16", "q8_0", "q4_0", "turbo2", "turbo3", "turbo4"]
 CTX = [8192, 16384, 32768, 65536, 131072, 200000, 262144]
 proc = None
@@ -26,7 +25,7 @@ def load_config():
             return json.loads(CONFIG.read_text())
         except:
             pass
-    return {"vram": 24}
+    return {"vram": 8}
 
 
 def save_config(c):
@@ -36,7 +35,7 @@ def save_config(c):
 
 def get_vram():
     cfg = load_config()
-    return cfg.get("vram", 24)
+    return cfg.get("vram", 8)
 
 
 def set_vram(gb):
@@ -61,23 +60,22 @@ signal.signal(signal.SIGINT, lambda *a: sys.exit(0))
 
 def run(cfg):
     global proc
-    from .engine import get_engine
+    from .engine import get_engine, add_dll_directory, LOG_FILE
 
-    # Ensure previous process is fully terminated before starting new one
-    # This prevents GPU context issues where 2nd instance loads in RAM
     if proc is not None:
         try:
             if proc.poll() is None:
                 proc.terminate()
                 proc.wait(timeout=2)
             else:
-                proc.wait()  # Clean up zombie
+                proc.wait()
         except:
             pass
         proc = None
-        time.sleep(0.5)  # Brief delay to ensure GPU context is released
+        time.sleep(0.5)
 
     exe = get_engine()
+    add_dll_directory()
     cmd = [
         exe,
         "-m",
@@ -96,6 +94,8 @@ def run(cfg):
         str(cfg["ngl"]),
         "--flash-attn",
         "on",
+        "--log-file",
+        str(LOG_FILE),
     ]
     # Add optional flags
     if cfg.get("ts"):
@@ -138,7 +138,7 @@ def run(cfg):
         creationflags=subprocess.CREATE_NEW_CONSOLE,
         cwd=str(Path(exe).parent),
     )
-    console.print(f"[dim]PID: {proc.pid}  Log: {LOG}[/]")
+    console.print(f"[dim]PID: {proc.pid}  Log: {LOG_FILE}[/]")
     try:
         with Live(
             Spinner("dots", text="Loading model...", style="cyan"),
@@ -148,10 +148,9 @@ def run(cfg):
             for i in range(300):
                 time.sleep(1)
                 if proc.poll() is not None:
-                    # Server crashed, try to read the log
-                    if LOG.exists():
+                    if LOG_FILE.exists():
                         try:
-                            lines = LOG.read_text().split("\n")[-10:]
+                            lines = LOG_FILE.read_text().split("\n")[-10:]
                             console.print("\n[red]Server log:[/]")
                             for line in lines:
                                 if line.strip():
@@ -297,10 +296,12 @@ def cmd_launch(name=None):
                 return 1.0
 
         bytes_per_token = cache_bytes(k) + cache_bytes(v)
-        # Multiply by ~8-10 to account for ~60 layers and KV heads (n_kv_heads × head_dim)
-        # For 27B: 60 layers × 8 heads × 128 dim ≈ 61,440, vs base hidden 4096 = factor of ~15
-        # Using factor of 10 as safe average for 7B-27B models
-        kv_gb = cs * HIDDEN_DIM * bytes_per_token * 10 / (1024**3)
+        # KV cache formula: ctx * n_kv_heads * head_dim * 2 * bytes_per_token / 1GB
+        # n_kv_heads=8 (GQA), head_dim=128 standard for most models
+        # factor of 2 accounts for both K and V tensors
+        # Using n_kv_heads * head_dim * 2 = 2048 (typical for GQA models)
+        KV_DIM = 2048  # n_kv_heads * head_dim * 2
+        kv_gb = cs * KV_DIM * bytes_per_token / (1024**3)
 
         est = model_gb * min(1, n / 100) + kv_gb + 0.5
         vram = get_vram()
@@ -520,12 +521,22 @@ def cmd_update():
     console.print(f"[dim]Current install: {install_path}[/]")
 
     try:
-        # Download latest release
-        url = "https://github.com/md-exitcode0/turbo-cli/archive/refs/heads/main.zip"
-        console.print("[dim]Downloading latest version...[/]")
+        # Get latest release version
+        api_url = "https://api.github.com/repos/md-exitcode0/turbo-cli/releases/latest"
+        console.print("[dim]Checking for latest release...[/]")
+
+        with urllib.request.urlopen(api_url) as resp:
+            release_data = json.loads(resp.read())
+            tag_name = release_data["tag_name"]
+            zipball_url = release_data["zipball_url"]
+
+        console.print(f"[dim]Latest release: {tag_name}[/]")
+
+        # Download release zip
+        console.print("[dim]Downloading...[/]")
 
         with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as tmp:
-            urllib.request.urlretrieve(url, tmp.name)
+            urllib.request.urlretrieve(zipball_url, tmp.name)
             zip_path = tmp.name
 
         # Extract to temp

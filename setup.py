@@ -5,7 +5,7 @@ here = Path(__file__).parent
 
 setup(
     name="turbo-cli",
-    version="1.0.0",
+    version="1.1.5",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     package_data={"turbo": ["data/*", "bin/*.exe"]},

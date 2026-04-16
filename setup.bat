@@ -6,8 +6,8 @@ echo   Turbo CLI Setup
 echo ========================================
 echo.
 
-REM Check Python
-python --version >nul 2>&1
+REM Check Python using py launcher
+py --version >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Python not found. Install from python.org
     pause
@@ -15,7 +15,7 @@ if errorlevel 1 (
 )
 
 echo Step 1: Bundling engine...
-python package_engine.py >nul 2>&1
+py package_engine.py >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Failed to bundle engine
     pause
@@ -23,7 +23,7 @@ if errorlevel 1 (
 )
 
 echo Step 2: Installing...
-python -m pip install -e . >nul 2>&1
+py -m pip install -e . >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Installation failed
     pause
